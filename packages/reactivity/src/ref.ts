@@ -56,7 +56,7 @@ class RefImpl<T> {
 
   public readonly __v_isRef = true
 
-  constructor(private _rawValue: T, public readonly _shallow = false) {
+  constructor(private _rawValue: T, public readonly _shallow: boolean) {
     this._value = _shallow ? _rawValue : convert(_rawValue)
   }
 
@@ -85,7 +85,7 @@ export function triggerRef(ref: Ref) {
   trigger(toRaw(ref), TriggerOpTypes.SET, 'value', __DEV__ ? ref.value : void 0)
 }
 
-export function unref<T>(ref: T): T extends Ref<infer V> ? V : T {
+export function unref<T>(ref: T | Ref<T>): T {
   return isRef(ref) ? (ref.value as any) : ref
 }
 

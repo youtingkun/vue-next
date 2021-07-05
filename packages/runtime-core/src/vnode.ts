@@ -26,8 +26,7 @@ import { AppContext } from './apiCreateApp'
 import {
   SuspenseImpl,
   isSuspense,
-  SuspenseBoundary,
-  normalizeSuspenseChildren
+  SuspenseBoundary
 } from './components/Suspense'
 import { DirectiveBinding } from './directives'
 import { TransitionHooks } from './components/BaseTransition'
@@ -137,6 +136,11 @@ export interface VNode<
    */
   [ReactiveFlags.SKIP]: true
 
+  /**
+   * @internal __COMPAT__ only
+   */
+  isCompatRoot?: true
+
   type: VNodeTypes
   props: (VNodeProps & ExtraProps) | null
   key: string | number | null
@@ -163,7 +167,8 @@ export interface VNode<
   anchor: HostNode | null // fragment anchor
   target: HostElement | null // teleport target
   targetAnchor: HostNode | null // teleport target anchor
-  staticCount: number // number of elements contained in a static vnode
+  staticCount?: number // number of elements contained in a static vnode
+  staticCache?: HostNode[] // cache of parsed static nodes for faster repeated insertions
 
   // suspense
   suspense: SuspenseBoundary | null
@@ -186,7 +191,7 @@ export interface VNode<
 // structure would be stable. This allows us to skip most children diffing
 // and only worry about the dynamic nodes (indicated by patch flags).
 export const blockStack: (VNode[] | null)[] = []
-let currentBlock: VNode[] | null = null
+export let currentBlock: VNode[] | null = null
 
 /**
  * Open a block.
@@ -435,7 +440,6 @@ function _createVNode(
     anchor: null,
     target: null,
     targetAnchor: null,
-    staticCount: 0,
     shapeFlag,
     patchFlag,
     dynamicProps,
@@ -452,9 +456,7 @@ function _createVNode(
 
   // normalize suspense children
   if (__FEATURE_SUSPENSE__ && shapeFlag & ShapeFlags.SUSPENSE) {
-    const { content, fallback } = normalizeSuspenseChildren(vnode)
-    vnode.ssContent = content
-    vnode.ssFallback = fallback
+    ;(type as typeof SuspenseImpl).normalize(vnode)
   }
 
   if (
@@ -519,6 +521,7 @@ export function cloneVNode<T, U>(
     target: vnode.target,
     targetAnchor: vnode.targetAnchor,
     staticCount: vnode.staticCount,
+    staticCache: vnode.staticCache,
     shapeFlag: vnode.shapeFlag,
     // if the vnode is cloned with extra props, we can no longer assume its
     // existing patch flag to be reliable and need to add the FULL_PROPS flag.
@@ -606,11 +609,16 @@ export function normalizeVNode(child: VNodeChild): VNode {
     return createVNode(Comment)
   } else if (isArray(child)) {
     // fragment
-    return createVNode(Fragment, null, child)
+    return createVNode(
+      Fragment,
+      null,
+      // #3666, avoid reference pollution when reusing vnode
+      child.slice()
+    )
   } else if (typeof child === 'object') {
     // already vnode, this should be the most common since compiled templates
     // always produce all-vnode children arrays
-    return child.el === null ? child : cloneVNode(child)
+    return cloneIfMounted(child)
   } else {
     // strings and numbers
     return createVNode(Text, null, String(child))
@@ -651,12 +659,12 @@ export function normalizeChildren(vnode: VNode, children: unknown) {
         // a child component receives forwarded slots from the parent.
         // its slot type is determined by its parent's slot type.
         if (
-          currentRenderingInstance.vnode.patchFlag & PatchFlags.DYNAMIC_SLOTS
+          (currentRenderingInstance.slots as RawSlots)._ === SlotFlags.STABLE
         ) {
+          ;(children as RawSlots)._ = SlotFlags.STABLE
+        } else {
           ;(children as RawSlots)._ = SlotFlags.DYNAMIC
           vnode.patchFlag |= PatchFlags.DYNAMIC_SLOTS
-        } else {
-          ;(children as RawSlots)._ = SlotFlags.STABLE
         }
       }
     }

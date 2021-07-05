@@ -51,7 +51,7 @@ export type Prop<T, D = T> = PropOptions<T, D> | PropType<T>
 
 type DefaultFactory<T> = (props: Data) => T | null | undefined
 
-interface PropOptions<T = any, D = T> {
+export interface PropOptions<T = any, D = T> {
   type?: PropType<T> | true | null
   required?: boolean
   default?: D | DefaultFactory<D> | null | undefined | object
@@ -109,7 +109,8 @@ type InferPropType<T> = [T] extends [null]
             : T
 
 export type ExtractPropTypes<O> = O extends object
-  ? { [K in RequiredKeys<O>]: InferPropType<O[K]> } &
+  ? { [K in keyof O]?: unknown } & // This is needed to keep the relation between the option prop and the props, allowing to use ctrl+click to navigate to the prop options. see: #3656
+      { [K in RequiredKeys<O>]: InferPropType<O[K]> } &
       { [K in OptionalKeys<O>]?: InferPropType<O[K]> }
   : { [K in string]: any }
 
@@ -436,8 +437,10 @@ export function normalizePropsOptions(
   appContext: AppContext,
   asMixin = false
 ): NormalizedPropsOptions {
-  if (!appContext.deopt && comp.__props) {
-    return comp.__props
+  const cache = appContext.propsCache
+  const cached = cache.get(comp)
+  if (cached) {
+    return cached
   }
 
   const raw = comp.props
@@ -468,7 +471,8 @@ export function normalizePropsOptions(
   }
 
   if (!raw && !hasExtends) {
-    return (comp.__props = EMPTY_ARR as any)
+    cache.set(comp, EMPTY_ARR as any)
+    return EMPTY_ARR as any
   }
 
   if (isArray(raw)) {
@@ -506,7 +510,9 @@ export function normalizePropsOptions(
     }
   }
 
-  return (comp.__props = [normalized, needCastKeys])
+  const res: NormalizedPropsOptions = [normalized, needCastKeys]
+  cache.set(comp, res)
+  return res
 }
 
 function validatePropName(key: string) {

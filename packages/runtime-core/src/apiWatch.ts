@@ -5,7 +5,8 @@ import {
   Ref,
   ComputedRef,
   ReactiveEffectOptions,
-  isReactive
+  isReactive,
+  ReactiveFlags
 } from '@vue/reactivity'
 import { SchedulerJob, queuePreFlushCb } from './scheduler'
 import {
@@ -174,8 +175,8 @@ function doWatch(
   let isMultiSource = false
 
   if (isRef(source)) {
-    getter = () => (source as Ref).value
-    forceTrigger = !!(source as Ref)._shallow
+    getter = () => source.value
+    forceTrigger = !!source._shallow
   } else if (isReactive(source)) {
     getter = () => source
     deep = true
@@ -309,7 +310,7 @@ function doWatch(
 
   let scheduler: ReactiveEffectOptions['scheduler']
   if (flush === 'sync') {
-    scheduler = job
+    scheduler = job as any // the scheduler function gets called directly
   } else if (flush === 'post') {
     scheduler = () => queuePostRenderEffect(job, instance && instance.suspense)
   } else {
@@ -390,7 +391,11 @@ export function createPathGetter(ctx: any, path: string) {
 }
 
 function traverse(value: unknown, seen: Set<unknown> = new Set()) {
-  if (!isObject(value) || seen.has(value)) {
+  if (
+    !isObject(value) ||
+    seen.has(value) ||
+    (value as any)[ReactiveFlags.SKIP]
+  ) {
     return value
   }
   seen.add(value)
