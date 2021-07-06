@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Document</title>
-    <!-- 注意这里的路径需要改写成你自己的 -->
-    <!-- 如果你的目录结构和我的一样，那么可以忽略 -->
     <script src="./packages/vue/dist/vue.global.js"></script>
   </head>
   <body>
@@ -18,12 +16,13 @@
       const vm = createApp({
         template: `
             <h1>{{ data.title }}</h1>
+            <h2>{{data.a}}</h2>
     `,
 
         setup() {
-            debugger;
           const data = reactive({
             title: "Hello World",
+            a:'123'
           });
 
           setTimeout(() => {

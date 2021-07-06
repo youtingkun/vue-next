@@ -100,12 +100,14 @@ function createGetter(isReadonly = false, shallow = false) {
       return target
     }
 
+    // 对数组的处理
     const targetIsArray = isArray(target)
 
     if (!isReadonly && targetIsArray && hasOwn(arrayInstrumentations, key)) {
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
 
+    // 获取请求值
     const res = Reflect.get(target, key, receiver)
 
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
@@ -199,6 +201,7 @@ function ownKeys(target: object): (string | symbol)[] {
   return Reflect.ownKeys(target)
 }
 
+//对这几种操作做了代理
 export const mutableHandlers: ProxyHandler<object> = {
   get,
   set,

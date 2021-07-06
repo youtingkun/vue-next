@@ -152,8 +152,15 @@ export function resetTracking() {
   const last = trackStack.pop()
   shouldTrack = last === undefined ? true : last
 }
-
+/**
+ * @description: get代理的trak函数
+ * @param {object} target 要代理的对象
+ * @param {TrackOpTypes} type
+ * @param {unknown} key
+ * @return {*}
+ */
 export function track(target: object, type: TrackOpTypes, key: unknown) {
+  //根据shouldTrack来判断是否要进行跟踪
   if (!shouldTrack || activeEffect === undefined) {
     return
   }
@@ -178,7 +185,11 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
     }
   }
 }
-
+/**
+ * @description:get代理的trigger函数
+ * @param {*}
+ * @return {*}
+ */
 export function trigger(
   target: object,
   type: TriggerOpTypes,

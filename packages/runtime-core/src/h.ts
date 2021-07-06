@@ -171,6 +171,13 @@ export function h<P>(
 ): VNode
 
 // Actual implementation
+/**
+ * @description:h函数，用于生成描述 HTML 结构
+ * @param {any} type
+ * @param {any} propsOrChildren
+ * @param {any} children
+ * @return {*}
+ */
 export function h(type: any, propsOrChildren?: any, children?: any): VNode {
   const l = arguments.length
   if (l === 2) {

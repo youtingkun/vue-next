@@ -557,9 +557,12 @@ export function setupComponent(
 
   const { props, children } = instance.vnode
   const isStateful = isStatefulComponent(instance)
+  // 处理props
   initProps(instance, props, isStateful, isSSR)
+  // 处理slots
   initSlots(instance, children)
 
+  //有状态的组件才会执行setupStatefulComponent
   const setupResult = isStateful
     ? setupStatefulComponent(instance, isSSR)
     : undefined
@@ -601,6 +604,7 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
+  // 创建instance.proxy代理，在使用option api 的时候的才能访问到this
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
@@ -608,6 +612,7 @@ function setupStatefulComponent(
   // 2. call setup()
   const { setup } = Component
   if (setup) {
+    // 创建context对象
     const setupContext = (instance.setupContext =
       setup.length > 1 ? createSetupContext(instance) : null)
 
@@ -729,6 +734,7 @@ export function finishComponentSetup(
   }
 
   // template / render function normalization
+  // 对不同情况render函数做处理
   if (__NODE_JS__ && isSSR) {
     // 1. the render function may already exist, returned by `setup`
     // 2. otherwise try to use the `Component.render`

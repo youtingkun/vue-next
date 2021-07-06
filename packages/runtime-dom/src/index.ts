@@ -53,6 +53,7 @@ export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
 
+//vue3的入口
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 

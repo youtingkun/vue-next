@@ -177,6 +177,7 @@ export function createAppAPI<HostElement>(
       rootProps = null
     }
 
+    // 创建默认APP配置
     const context = createAppContext()
     const installedPlugins = new Set()
 
@@ -266,7 +267,7 @@ export function createAppAPI<HostElement>(
         context.directives[name] = directive
         return app
       },
-
+      // mount挂载函数
       mount(
         rootContainer: HostElement,
         isHydrate?: boolean,

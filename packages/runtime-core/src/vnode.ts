@@ -121,6 +121,11 @@ export type VNodeNormalizedChildren =
   | RawSlots
   | null
 
+/**
+ * @description: 虚拟节点VNode的定义
+ * @param {*}
+ * @return {*}
+ */
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
@@ -129,7 +134,7 @@ export interface VNode<
   /**
    * @internal
    */
-  __v_isVNode: true
+  __v_isVNode: true // _isVNode 是 VNode 对象
 
   /**
    * @internal
@@ -339,6 +344,11 @@ export const createVNode = (__DEV__
   ? createVNodeWithArgsTransform
   : _createVNode) as typeof _createVNode
 
+/**
+ * @description: 创建虚拟节点的函数，在h()函数中被调用
+ * @param {*}
+ * @return {*}
+ */
 function _createVNode(
   type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT,
   props: (Data & VNodeProps) | null = null,
@@ -360,6 +370,7 @@ function _createVNode(
     // #2078 make sure to merge refs during the clone instead of overwriting it
     const cloned = cloneVNode(type, props, true /* mergeRef: true */)
     if (children) {
+      // 对子节点进行处理
       normalizeChildren(cloned, children)
     }
     return cloned
@@ -630,6 +641,12 @@ export function cloneIfMounted(child: VNode): VNode {
   return child.el === null ? child : cloneVNode(child)
 }
 
+/**
+ * @description: 子节点处理函数
+ * @param {VNode} vnode
+ * @param {unknown} children
+ * @return {*}
+ */
 export function normalizeChildren(vnode: VNode, children: unknown) {
   let type = 0
   const { shapeFlag } = vnode

@@ -445,6 +445,11 @@ function baseCreateRenderer(
 ): HydrationRenderer
 
 // implementation
+/**
+ * @description: baseCreateRenderer函数，vnode diff patch均在这个方法中实现
+ * @param {*}
+ * @return {*}
+ */
 function baseCreateRenderer(
   options: RendererOptions,
   createHydrationFns?: typeof createHydrationFunctions
@@ -477,6 +482,7 @@ function baseCreateRenderer(
     insertStaticContent: hostInsertStaticContent
   } = options
 
+  //  patch方法渲染组件
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
   const patch: PatchFn = (
@@ -503,21 +509,22 @@ function baseCreateRenderer(
     }
 
     const { type, ref, shapeFlag } = n2
+    // 根据节点的不同类型来执行不同的渲染方法
     switch (type) {
-      case Text:
+      case Text: //文本类型
         processText(n1, n2, container, anchor)
         break
-      case Comment:
+      case Comment: //注释
         processCommentNode(n1, n2, container, anchor)
         break
-      case Static:
+      case Static: // 静态
         if (n1 == null) {
           mountStaticNode(n2, container, anchor, isSVG)
         } else if (__DEV__) {
           patchStaticNode(n1, n2, container, isSVG)
         }
         break
-      case Fragment:
+      case Fragment: //fragment片段
         processFragment(
           n1,
           n2,
@@ -532,6 +539,7 @@ function baseCreateRenderer(
         break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
+          //原生dom节点，比如div
           processElement(
             n1,
             n2,
@@ -544,6 +552,7 @@ function baseCreateRenderer(
             optimized
           )
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          //组件节点
           processComponent(
             n1,
             n2,
@@ -556,6 +565,7 @@ function baseCreateRenderer(
             optimized
           )
         } else if (shapeFlag & ShapeFlags.TELEPORT) {
+          //传送节点（比如你的 modal 内容并不是在当前节点树下的，而是会挂载到 body 下）
           ;(type as typeof TeleportImpl).process(
             n1 as TeleportVNode,
             n2 as TeleportVNode,
@@ -569,6 +579,7 @@ function baseCreateRenderer(
             internals
           )
         } else if (__FEATURE_SUSPENSE__ && shapeFlag & ShapeFlags.SUSPENSE) {
+          // 挂起节点（异步渲染）
           ;(type as typeof SuspenseImpl).process(
             n1,
             n2,
@@ -1267,7 +1278,7 @@ function baseCreateRenderer(
       }
     }
   }
-
+  // 对于自定义组件的处理
   const processComponent = (
     n1: VNode | null,
     n2: VNode,
@@ -1304,7 +1315,7 @@ function baseCreateRenderer(
       updateComponent(n1, n2, optimized)
     }
   }
-
+  // 挂载组件的方法
   const mountComponent: MountComponentFn = (
     initialVNode,
     container,
@@ -1316,6 +1327,7 @@ function baseCreateRenderer(
   ) => {
     // 2.x compat may pre-creaate the component instance before actually
     // mounting
+    //创建挂载实例
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
     const instance: ComponentInternalInstance =
@@ -1345,6 +1357,7 @@ function baseCreateRenderer(
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
+      // 调用setupComponent方法
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1433,6 +1446,7 @@ function baseCreateRenderer(
         const { bm, m, parent } = instance
 
         // beforeMount hook
+        // 执行beforeMount钩子函数
         if (bm) {
           invokeArrayFns(bm)
         }
@@ -1494,6 +1508,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `patch`)
           }
+          // 渲染子树
           patch(
             null,
             subTree,
@@ -1509,6 +1524,7 @@ function baseCreateRenderer(
           initialVNode.el = subTree.el
         }
         // mounted hook
+        // 把mounted生命周期方法加入到队列
         if (m) {
           queuePostRenderEffect(m, parentSuspense)
         }
@@ -1545,6 +1561,7 @@ function baseCreateRenderer(
             )
           }
         }
+        // 标记实例已经挂载
         instance.isMounted = true
 
         if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
