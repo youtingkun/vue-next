@@ -482,7 +482,7 @@ function baseCreateRenderer(
     insertStaticContent: hostInsertStaticContent
   } = options
 
-  //  patch方法渲染组件
+  //  patch方法源码，新旧节点比较。
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
   const patch: PatchFn = (
@@ -1856,6 +1856,12 @@ function baseCreateRenderer(
   }
 
   // can be all-keyed or mixed
+  /**
+   * @description: 新旧子节点都数组的情况下，进行diff算法比较
+   * @param {*}
+   * @return {*}
+   */
+
   const patchKeyedChildren = (
     c1: VNode[],
     c2: VNodeArrayChildren,
