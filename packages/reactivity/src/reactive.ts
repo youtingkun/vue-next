@@ -84,6 +84,11 @@ export type UnwrapNestedRefs<T> = T extends Ref ? T : UnwrapRef<T>
  * count.value // -> 1
  * ```
  */
+/**
+ * @description: reactive函数入口
+ * @param {T} target
+ * @return {*}
+ */
 export function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
 export function reactive(target: object) {
   // if trying to observe a readonly proxy, return the readonly version.
@@ -104,6 +109,7 @@ export function reactive(target: object) {
  * level properties are reactive. It also does not auto-unwrap refs (even at the
  * root level).
  */
+
 export function shallowReactive<T extends object>(target: T): T {
   return createReactiveObject(
     target,
@@ -170,11 +176,16 @@ export function shallowReadonly<T extends object>(
   )
 }
 
-// 创建响应式对象
+/**
+ * @description:创建响应式对象
+ * @param {target} Target 要代理的对象
+ * @param {baseHandlers} ProxyHandler get,set,deleteProperty,has,ownKeys
+ * @return {*}
+ */
 function createReactiveObject(
   target: Target,
   isReadonly: boolean,
-  baseHandlers: ProxyHandler<any>,
+  baseHandlers: ProxyHandler<any>, //
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>
 ) {
@@ -207,6 +218,7 @@ function createReactiveObject(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
+  // 保存到WeekMap中
   proxyMap.set(target, proxy)
   return proxy
 }

@@ -153,7 +153,7 @@ export function resetTracking() {
   shouldTrack = last === undefined ? true : last
 }
 /**
- * @description: get代理的trak函数
+ * @description: 收集依赖
  * @param {object} target 要代理的对象
  * @param {TrackOpTypes} type
  * @param {unknown} key
@@ -165,13 +165,16 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
     return
   }
   let depsMap = targetMap.get(target)
+  // 收集这个对象的依赖，采用wekMap存储，里面是所有需要响应的对象
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()))
   }
   let dep = depsMap.get(key)
+  // 收集这个属性，采用Map存储，里面是某个对象所有需要响应的属性
   if (!dep) {
     depsMap.set(key, (dep = new Set()))
   }
+  // 收集某个属性对应的依赖项，采用set存储，里面是某个属性对应的所有依赖项（当这个对象对应属性的值发生变化时，这些依赖项函数会重新执行）
   if (!dep.has(activeEffect)) {
     dep.add(activeEffect)
     activeEffect.deps.push(dep)
@@ -186,7 +189,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
   }
 }
 /**
- * @description:get代理的trigger函数
+ * @description:派发更新
  * @param {*}
  * @return {*}
  */
@@ -278,6 +281,6 @@ export function trigger(
       effect()
     }
   }
-
+  // 派发更新
   effects.forEach(run)
 }

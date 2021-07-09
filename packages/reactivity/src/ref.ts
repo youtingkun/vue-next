@@ -34,7 +34,11 @@ export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
 export function isRef(r: any): r is Ref {
   return Boolean(r && r.__v_isRef === true)
 }
-
+/**
+ * @description: ref入口函数，把基本类型变量变成响应式对象，通过.value获取值。
+ * @param {T} value
+ * @return {*}
+ */
 export function ref<T extends object>(value: T): ToRef<T>
 export function ref<T>(value: T): Ref<UnwrapRef<T>>
 export function ref<T = any>(): Ref<T | undefined>
@@ -51,6 +55,11 @@ export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
 
+/**
+ * @description: ref实现类
+ * @param {*}
+ * @return {*}
+ */
 class RefImpl<T> {
   private _value: T
 
@@ -59,12 +68,12 @@ class RefImpl<T> {
   constructor(private _rawValue: T, public readonly _shallow: boolean) {
     this._value = _shallow ? _rawValue : convert(_rawValue)
   }
-
+  // 对value属性进行getter代理，依赖收集
   get value() {
     track(toRaw(this), TrackOpTypes.GET, 'value')
     return this._value
   }
-
+  // 对value属性进行setter代理，派发更新
   set value(newVal) {
     if (hasChanged(toRaw(newVal), this._rawValue)) {
       this._rawValue = newVal
@@ -73,7 +82,12 @@ class RefImpl<T> {
     }
   }
 }
-
+/**
+ * @description: ref创建函数
+ * @param {unknown} rawValue
+ * @param {*} shallow
+ * @return {*}
+ */
 function createRef(rawValue: unknown, shallow = false) {
   if (isRef(rawValue)) {
     return rawValue

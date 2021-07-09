@@ -20,6 +20,11 @@ export interface WritableComputedOptions<T> {
   set: ComputedSetter<T>
 }
 
+/**
+ * @description: computed实现类
+ * @param {*}
+ * @return {*}
+ */
 class ComputedRefImpl<T> {
   private _value!: T
   private _dirty = true
@@ -63,6 +68,11 @@ class ComputedRefImpl<T> {
   }
 }
 
+/**
+ * @description: computed函数入口
+ * @param {ComputedGetter} getter
+ * @return {*}
+ */
 export function computed<T>(getter: ComputedGetter<T>): ComputedRef<T>
 export function computed<T>(
   options: WritableComputedOptions<T>

@@ -361,7 +361,7 @@ function createInstrumentationGetter(isReadonly: boolean, shallow: boolean) {
     } else if (key === ReactiveFlags.RAW) {
       return target
     }
-
+    // 反射get捕获器
     return Reflect.get(
       hasOwn(instrumentations, key) && key in target
         ? instrumentations

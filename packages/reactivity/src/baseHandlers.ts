@@ -79,6 +79,12 @@ function createArrayInstrumentations() {
   return instrumentations
 }
 
+/**
+ * @description: getter代理操作
+ * @param {*} isReadonly
+ * @param {*} shallow
+ * @return {*}
+ */
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target: Target, key: string | symbol, receiver: object) {
     if (key === ReactiveFlags.IS_REACTIVE) {
@@ -142,6 +148,11 @@ function createGetter(isReadonly = false, shallow = false) {
 const set = /*#__PURE__*/ createSetter()
 const shallowSet = /*#__PURE__*/ createSetter(true)
 
+/**
+ * @description: setter代理操作
+ * @param {*} shallow
+ * @return {*}
+ */
 function createSetter(shallow = false) {
   return function set(
     target: object,
