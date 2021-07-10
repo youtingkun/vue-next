@@ -426,6 +426,11 @@ const emptyAppContext = createAppContext()
 
 let uid = 0
 
+/**
+ * @description: 创建组件实例的方法
+ * @param {*}
+ * @return {*}
+ */
 export function createComponentInstance(
   vnode: VNode,
   parent: ComponentInternalInstance | null,
@@ -475,13 +480,13 @@ export function createComponentInstance(
     inheritAttrs: type.inheritAttrs,
 
     // state
-    ctx: EMPTY_OBJ,
+    ctx: EMPTY_OBJ, // context 对象
     data: EMPTY_OBJ,
     props: EMPTY_OBJ,
-    attrs: EMPTY_OBJ,
-    slots: EMPTY_OBJ,
+    attrs: EMPTY_OBJ, // 存放 attrs 的数据
+    slots: EMPTY_OBJ, // 存放插槽的数据
     refs: EMPTY_OBJ,
-    setupState: EMPTY_OBJ,
+    setupState: EMPTY_OBJ, // 存储 setup 的返回值
     setupContext: null,
 
     // suspense related
@@ -516,6 +521,7 @@ export function createComponentInstance(
     instance.ctx = { _: instance }
   }
   instance.root = parent ? parent.root : instance
+  // 赋值 emit，这里使用 bind 把 instance 进行绑定，后面用户使用的时候只需要给 event 和参数即可
   instance.emit = emit.bind(null, instance)
 
   return instance

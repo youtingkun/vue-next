@@ -1291,6 +1291,7 @@ function baseCreateRenderer(
     optimized: boolean
   ) => {
     n2.slotScopeIds = slotScopeIds
+    //如果 n1 没有值的话，那么就是 mount组件
     if (n1 == null) {
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
         ;(parentComponent!.ctx as KeepAliveContext).activate(
@@ -1312,6 +1313,7 @@ function baseCreateRenderer(
         )
       }
     } else {
+      // 更新组件
       updateComponent(n1, n2, optimized)
     }
   }
@@ -1357,7 +1359,7 @@ function baseCreateRenderer(
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
-      // 调用setupComponent方法
+      // 调用setupComponent方法，给 instance 加工加工
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)

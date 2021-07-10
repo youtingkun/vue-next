@@ -136,6 +136,11 @@ type NormalizedProp =
 export type NormalizedProps = Record<string, NormalizedProp>
 export type NormalizedPropsOptions = [NormalizedProps, string[]] | []
 
+/**
+ * @description: 组件实例props属性处理函数
+ * @param {*}
+ * @return {*}
+ */
 export function initProps(
   instance: ComponentInternalInstance,
   rawProps: Data | null,
