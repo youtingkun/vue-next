@@ -139,6 +139,7 @@ export const initSlots = (
       // make compiler marker non-enumerable
       def(children as InternalSlots, '_', type)
     } else {
+      //   正常对象的slots进行初始化
       normalizeObjectSlots(
         children as RawSlots,
         (instance.slots = {}),

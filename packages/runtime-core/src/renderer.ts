@@ -1329,7 +1329,7 @@ function baseCreateRenderer(
   ) => {
     // 2.x compat may pre-creaate the component instance before actually
     // mounting
-    //创建挂载实例
+    //1. 先创建一个 component instance
     const compatMountInstance =
       __COMPAT__ && initialVNode.isCompatRoot && initialVNode.component
     const instance: ComponentInternalInstance =
@@ -1359,7 +1359,7 @@ function baseCreateRenderer(
       if (__DEV__) {
         startMeasure(instance, `init`)
       }
-      // 调用setupComponent方法，给 instance 加工加工
+      //2. 调用setupComponent方法，给 instance 加工加工
       setupComponent(instance)
       if (__DEV__) {
         endMeasure(instance, `init`)
@@ -1379,7 +1379,7 @@ function baseCreateRenderer(
       }
       return
     }
-
+    // 3. 执行setupRenderEffect
     setupRenderEffect(
       instance,
       initialVNode,
@@ -1441,8 +1441,10 @@ function baseCreateRenderer(
     optimized
   ) => {
     // create reactive effect for rendering
+    // 给rendering创建响应式依赖
     instance.update = effect(function componentEffect() {
       if (!instance.isMounted) {
+        // 如果没有被挂载，组件新增逻辑
         let vnodeHook: VNodeHook | null | undefined
         const { el, props } = initialVNode
         const { bm, m, parent } = instance
@@ -1469,6 +1471,7 @@ function baseCreateRenderer(
             if (__DEV__) {
               startMeasure(instance, `render`)
             }
+
             instance.subTree = renderComponentRoot(instance)
             if (__DEV__) {
               endMeasure(instance, `render`)
@@ -1503,6 +1506,7 @@ function baseCreateRenderer(
           if (__DEV__) {
             startMeasure(instance, `render`)
           }
+          // 调用 renderComponentRoot,获取 subTree，可以理解为需要渲染的虚拟vNode节点树
           const subTree = (instance.subTree = renderComponentRoot(instance))
           if (__DEV__) {
             endMeasure(instance, `render`)
@@ -1511,6 +1515,7 @@ function baseCreateRenderer(
             startMeasure(instance, `patch`)
           }
           // 渲染子树
+          //再次调用patch对subTree进行渲染
           patch(
             null,
             subTree,
@@ -1526,7 +1531,7 @@ function baseCreateRenderer(
           initialVNode.el = subTree.el
         }
         // mounted hook
-        // 把mounted生命周期方法加入到队列
+        // 渲染出来后，把mounted钩子函数加入到队列
         if (m) {
           queuePostRenderEffect(m, parentSuspense)
         }
@@ -1563,7 +1568,7 @@ function baseCreateRenderer(
             )
           }
         }
-        // 标记实例已经挂载
+        // 标记实例已经挂载，此时dom中就渲染出来真实的值了
         instance.isMounted = true
 
         if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
@@ -1573,6 +1578,7 @@ function baseCreateRenderer(
         // #2458: deference mount-only object parameters to prevent memleaks
         initialVNode = container = anchor = null as any
       } else {
+        // 已经挂载，组件更新逻辑
         // updateComponent
         // This is triggered by mutation of component's own state (next: null)
         // OR parent calling processComponent (next: VNode)
@@ -1591,6 +1597,7 @@ function baseCreateRenderer(
         }
 
         // beforeUpdate hook
+        // beforeUpdate钩子函数
         if (bu) {
           invokeArrayFns(bu)
         }
@@ -1609,16 +1616,19 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+        // 获取新的subTree
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+        // 存储老的subTree
         const prevTree = instance.subTree
         instance.subTree = nextTree
 
         if (__DEV__) {
           startMeasure(instance, `patch`)
         }
+        // patch比较新老subTree
         patch(
           prevTree,
           nextTree,
@@ -1641,6 +1651,7 @@ function baseCreateRenderer(
           updateHOCHostEl(instance, nextTree.el)
         }
         // updated hook
+        // updated钩子函数
         if (u) {
           queuePostRenderEffect(u, parentSuspense)
         }

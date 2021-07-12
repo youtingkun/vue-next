@@ -576,6 +576,11 @@ export function setupComponent(
   return setupResult
 }
 
+/**
+ * @description: 对有状态的函数进行处理
+ * @param {*}
+ * @return {*}
+ */
 function setupStatefulComponent(
   instance: ComponentInternalInstance,
   isSSR: boolean
@@ -610,7 +615,7 @@ function setupStatefulComponent(
   instance.accessCache = Object.create(null)
   // 1. create public instance / render proxy
   // also mark it raw so it's never observed
-  // 创建instance.proxy代理，在使用option api 的时候的才能访问到this
+  // 创建instance.proxy代理，这样在使用option api 的时候的才能访问到this
   instance.proxy = markRaw(new Proxy(instance.ctx, PublicInstanceProxyHandlers))
   if (__DEV__) {
     exposePropsOnRenderContext(instance)
@@ -659,6 +664,7 @@ function setupStatefulComponent(
         )
       }
     } else {
+      //处理 setupResult
       handleSetupResult(instance, setupResult, isSSR)
     }
   } else {
@@ -671,6 +677,8 @@ export function handleSetupResult(
   setupResult: unknown,
   isSSR: boolean
 ) {
+  // 如果返回的是 function 的话，那么绑定到 render 上，认为是 render 逻辑
+  // setup(){ return ()=>(h("div")) }
   if (isFunction(setupResult)) {
     // setup returned an inline render function
     if (__NODE_JS__ && (instance.type as ComponentOptions).__ssrInlineRender) {
@@ -681,6 +689,8 @@ export function handleSetupResult(
       instance.render = setupResult as InternalRenderFunction
     }
   } else if (isObject(setupResult)) {
+    // 如果返回的是一个对象
+    // 先存到 setupState 上
     if (__DEV__ && isVNode(setupResult)) {
       warn(
         `setup() should not return VNodes directly - ` +
@@ -692,6 +702,7 @@ export function handleSetupResult(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       instance.devtoolsRawSetupState = setupResult
     }
+    // 使用 @vue/reactivity 里面的 proxyRefs，proxyRefs 的作用就是把 setupResult 对象做一层代理，方便用户直接访问 ref 类型的值，比如 setupResult 里面有个 count 是个 ref 类型的对象，用户使用的时候就可以直接使用 count 了，而不需要在 count.value
     instance.setupState = proxyRefs(setupResult)
     if (__DEV__) {
       exposeSetupStateOnRenderContext(instance)
@@ -703,6 +714,12 @@ export function handleSetupResult(
       }`
     )
   }
+  /**
+   * @description: 完成setup
+   * @param {*}
+   * @return {*}
+   */
+
   finishComponentSetup(instance, isSSR)
 }
 
@@ -724,6 +741,11 @@ export function registerRuntimeCompiler(_compile: any) {
   compile = _compile
 }
 
+/**
+ * @description: 主要做用是给实例添加render
+ * @param {*}
+ * @return {*}
+ */
 export function finishComponentSetup(
   instance: ComponentInternalInstance,
   isSSR: boolean,
@@ -804,6 +826,12 @@ export function finishComponentSetup(
     }
   }
 
+  /**
+   * @description:兼容2.x的写法
+   * @param {*}
+   * @return {*}
+   */
+
   // support for 2.x options
   if (__FEATURE_OPTIONS_API__ && !(__COMPAT__ && skipOptions)) {
     currentInstance = instance
@@ -850,6 +878,11 @@ const attrDevProxyHandlers: ProxyHandler<Data> = {
   }
 }
 
+/**
+ * @description: 初始化 setup context
+ * @param {*}
+ * @return {*}
+ */
 export function createSetupContext(
   instance: ComponentInternalInstance
 ): SetupContext {

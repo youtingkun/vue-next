@@ -172,7 +172,7 @@ export function h<P>(
 
 // Actual implementation
 /**
- * @description:h函数，用于生成描述 HTML 结构
+ * @description:h函数，用于生成描述 HTML 结构，也就是vNode虚拟节点
  * @param {any} type
  * @param {any} propsOrChildren
  * @param {any} children

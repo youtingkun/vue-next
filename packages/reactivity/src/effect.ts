@@ -93,6 +93,11 @@ export function stop(effect: ReactiveEffect) {
 
 let uid = 0
 
+/**
+ * @description: 创建响应式依赖
+ * @param {*}
+ * @return {*}
+ */
 function createReactiveEffect<T = any>(
   fn: () => T,
   options: ReactiveEffectOptions
