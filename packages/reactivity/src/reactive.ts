@@ -179,13 +179,16 @@ export function shallowReadonly<T extends object>(
 /**
  * @description:创建响应式对象
  * @param {target} Target 要代理的对象
- * @param {baseHandlers} ProxyHandler get,set,deleteProperty,has,ownKeys
+ * @param {boolean} isReadonly 是否是只读对象
+ * @param {ProxyHandler} ProxyHandler get,set,deleteProperty,has,ownKeys
+ * @param {ProxyHandler} collectionHandlers 对于集合的代理，因为集合没有 set 方法，赋值用的是 add 操作
+ * @param {WeakMap} proxyMap 用于存储所有响应式对象的WeakMap对象
  * @return {*}
  */
 function createReactiveObject(
   target: Target,
   isReadonly: boolean,
-  baseHandlers: ProxyHandler<any>, //
+  baseHandlers: ProxyHandler<any>,
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>
 ) {
@@ -220,6 +223,7 @@ function createReactiveObject(
   )
   // 保存到WeekMap中
   proxyMap.set(target, proxy)
+
   return proxy
 }
 

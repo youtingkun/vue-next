@@ -114,6 +114,7 @@ function createGetter(isReadonly = false, shallow = false) {
     }
 
     // 获取请求值
+
     const res = Reflect.get(target, key, receiver)
 
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {

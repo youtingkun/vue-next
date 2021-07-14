@@ -127,6 +127,9 @@ function createReactiveEffect<T = any>(
   effect.raw = fn
   effect.deps = []
   effect.options = options
+
+  console.log('effect', effect)
+
   return effect
 }
 
@@ -174,11 +177,14 @@ export function track(target: object, type: TrackOpTypes, key: unknown) {
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()))
   }
+  console.log('targetMap', targetMap)
+
   let dep = depsMap.get(key)
   // 收集这个属性，采用Map存储，里面是某个对象所有需要响应的属性
   if (!dep) {
     depsMap.set(key, (dep = new Set()))
   }
+  console.log('depsMap', depsMap)
   // 收集某个属性对应的依赖项，采用set存储，里面是某个属性对应的所有依赖项（当这个对象对应属性的值发生变化时，这些依赖项函数会重新执行）
   if (!dep.has(activeEffect)) {
     dep.add(activeEffect)
@@ -287,5 +293,7 @@ export function trigger(
     }
   }
   // 派发更新
+  console.log('effects', effects)
+
   effects.forEach(run)
 }

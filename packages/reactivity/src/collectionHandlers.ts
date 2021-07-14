@@ -237,6 +237,7 @@ function createReadonlyMethod(type: TriggerOpTypes): Function {
 }
 
 function createInstrumentations() {
+  // 对于集合几种方法的代理
   const mutableInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key)

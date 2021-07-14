@@ -24,12 +24,17 @@
             title: "Hello World",
             a:'123'
           });
+          const b = reactive({
+              t:data.title
+          })
+          console.log(data);
+          
 
           setTimeout(() => {
             data.title = "New Title";
           }, 3000);
 
-          return { data };
+          return { data,b };
         },
       }).mount("#app");
     </script>
