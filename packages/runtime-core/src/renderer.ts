@@ -345,10 +345,10 @@ function baseCreateRenderer(
     initFeatureFlags()
   }
 
+  const target = getGlobalThis()
+  target.__VUE__ = true
   if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
-    const target = getGlobalThis()
-    target.__VUE__ = true
-    setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__)
+    setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__, target)
   }
 
   const {
@@ -1213,7 +1213,7 @@ function baseCreateRenderer(
     isSVG,
     optimized
   ) => {
-    // 2.x compat may pre-creaate the component instance before actually
+    // 2.x compat may pre-create the component instance before actually
     // mounting
     //1. 先创建一个 component instance
     const compatMountInstance =
@@ -1482,6 +1482,9 @@ function baseCreateRenderer(
           pushWarningContext(next || instance.vnode)
         }
 
+        // Disallow component effect recursion during pre-lifecycle hooks.
+        effect.allowRecurse = false
+
         if (next) {
           next.el = vnode.el
           updateComponentPreRender(instance, next, optimized)
@@ -1489,8 +1492,6 @@ function baseCreateRenderer(
           next = vnode
         }
 
-        // Disallow component effect recursion during pre-lifecycle hooks.
-        effect.allowRecurse = false
         // beforeUpdate hook
         // beforeUpdate钩子函数
         if (bu) {
@@ -1506,6 +1507,7 @@ function baseCreateRenderer(
         ) {
           instance.emit('hook:beforeUpdate')
         }
+
         effect.allowRecurse = true
 
         // render
@@ -2496,8 +2498,8 @@ export function invokeVNodeHook(
  *
  * #2080
  * Inside keyed `template` fragment static children, if a fragment is moved,
- * the children will always moved so that need inherit el form previous nodes
- * to ensure correct moved position.
+ * the children will always be moved. Therefore, in order to ensure correct move
+ * position, el should be inherited from previous nodes.
  */
 export function traverseStaticChildren(n1: VNode, n2: VNode, shallow = false) {
   const ch1 = n1.children

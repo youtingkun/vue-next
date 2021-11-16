@@ -291,7 +291,7 @@ function setupBlock(vnode: VNode) {
  * @private
  */
 export function createElementBlock(
-  type: string,
+  type: string | typeof Fragment,
   props?: Record<string, any> | null,
   children?: any,
   patchFlag?: number,
@@ -808,7 +808,10 @@ export function mergeProps(...args: (Data & VNodeProps)[]) {
       } else if (isOn(key)) {
         const existing = ret[key]
         const incoming = toMerge[key]
-        if (existing !== incoming) {
+        if (
+          existing !== incoming &&
+          !(isArray(existing) && existing.includes(incoming))
+        ) {
           ret[key] = existing
             ? [].concat(existing as any, incoming as any)
             : incoming

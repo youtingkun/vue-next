@@ -1,11 +1,12 @@
 import { isTracking, trackEffects, triggerEffects } from './effect'
 import { TrackOpTypes, TriggerOpTypes } from './operations'
-import { isArray, isObject, hasChanged } from '@vue/shared'
-import { reactive, isProxy, toRaw, isReactive } from './reactive'
+import { isArray, hasChanged } from '@vue/shared'
+import { isProxy, toRaw, isReactive, toReactive } from './reactive'
+import type { ShallowReactiveMarker } from './reactive'
 import { CollectionTypes } from './collectionHandlers'
 import { createDep, Dep } from './dep'
 
-export declare const RefSymbol: unique symbol
+declare const RefSymbol: unique symbol
 
 export interface Ref<T = any> {
   value: T
@@ -60,46 +61,40 @@ export function triggerRefValue(ref: RefBase<any>, newVal?: any) {
   }
 }
 
-export type ToRef<T> = [T] extends [Ref] ? T : Ref<UnwrapRef<T>>
-export type ToRefs<T = any> = {
-  // #2687: somehow using ToRef<T[K]> here turns the resulting type into
-  // a union of multiple Ref<*> types instead of a single Ref<* | *> type.
-  [K in keyof T]: T[K] extends Ref ? T[K] : Ref<UnwrapRef<T[K]>>
-}
-
-const convert = <T extends unknown>(val: T): T =>
-  isObject(val) ? reactive(val) : val
-
 export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
 export function isRef(r: any): r is Ref {
   return Boolean(r && r.__v_isRef === true)
 }
-/**
- * @description: ref入口函数，把基本类型变量变成响应式对象，通过.value获取值。
- * @param {T} value
- * @return {*}
- */
-export function ref<T extends object>(value: T): ToRef<T>
+
+export function ref<T extends object>(
+  value: T
+): [T] extends [Ref] ? T : Ref<UnwrapRef<T>>
 export function ref<T>(value: T): Ref<UnwrapRef<T>>
 export function ref<T = any>(): Ref<T | undefined>
 export function ref(value?: unknown) {
-  return createRef(value)
+  return createRef(value, false)
 }
+
+declare const ShallowRefMarker: unique symbol
+
+type ShallowRef<T = any> = Ref<T> & { [ShallowRefMarker]?: true }
 
 export function shallowRef<T extends object>(
   value: T
-): T extends Ref ? T : Ref<T>
-export function shallowRef<T>(value: T): Ref<T>
-export function shallowRef<T = any>(): Ref<T | undefined>
+): T extends Ref ? T : ShallowRef<T>
+export function shallowRef<T>(value: T): ShallowRef<T>
+export function shallowRef<T = any>(): ShallowRef<T | undefined>
 export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
 
-/**
- * @description: ref实现类
- * @param {*}
- * @return {*}
- */
+function createRef(rawValue: unknown, shallow: boolean) {
+  if (isRef(rawValue)) {
+    return rawValue
+  }
+  return new RefImpl(rawValue, shallow)
+}
+
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
@@ -107,9 +102,9 @@ class RefImpl<T> {
   public dep?: Dep = undefined
   public readonly __v_isRef = true
 
-  constructor(value: T, public readonly _shallow = false) {
+  constructor(value: T, public readonly _shallow: boolean) {
     this._rawValue = _shallow ? value : toRaw(value)
-    this._value = _shallow ? value : convert(value)
+    this._value = _shallow ? value : toReactive(value)
   }
   // 对value属性进行getter代理，依赖收集
   get value() {
@@ -121,22 +116,10 @@ class RefImpl<T> {
     newVal = this._shallow ? newVal : toRaw(newVal)
     if (hasChanged(newVal, this._rawValue)) {
       this._rawValue = newVal
-      this._value = this._shallow ? newVal : convert(newVal)
+      this._value = this._shallow ? newVal : toReactive(newVal)
       triggerRefValue(this, newVal)
     }
   }
-}
-/**
- * @description: ref创建函数
- * @param {unknown} rawValue
- * @param {*} shallow
- * @return {*}
- */
-function createRef(rawValue: unknown, shallow = false) {
-  if (isRef(rawValue)) {
-    return rawValue
-  }
-  return new RefImpl(rawValue, shallow)
 }
 
 export function triggerRef(ref: Ref) {
@@ -168,7 +151,7 @@ export function proxyRefs<T extends object>(
     : new Proxy(objectWithRefs, shallowUnwrapHandlers)
 }
 
-export type CustomRefFactory<T> = (
+type CustomRefFactory<T> = (
   track: () => void,
   trigger: () => void
 ) => {
@@ -206,6 +189,11 @@ export function customRef<T>(factory: CustomRefFactory<T>): Ref<T> {
   return new CustomRefImpl(factory) as any
 }
 
+export type ToRefs<T = any> = {
+  // #2687: somehow using ToRef<T[K]> here turns the resulting type into
+  // a union of multiple Ref<*> types instead of a single Ref<* | *> type.
+  [K in keyof T]: T[K] extends Ref ? T[K] : Ref<UnwrapRef<T[K]>>
+}
 export function toRefs<T extends object>(object: T): ToRefs<T> {
   if (__DEV__ && !isProxy(object)) {
     console.warn(`toRefs() expects a reactive object but received a plain one.`)
@@ -231,13 +219,14 @@ class ObjectRefImpl<T extends object, K extends keyof T> {
   }
 }
 
+export type ToRef<T> = [T] extends [Ref] ? T : Ref<T>
+
 export function toRef<T extends object, K extends keyof T>(
   object: T,
   key: K
 ): ToRef<T[K]> {
-  return isRef(object[key])
-    ? object[key]
-    : (new ObjectRefImpl(object, key) as any)
+  const val = object[key]
+  return isRef(val) ? val : (new ObjectRefImpl(object, key) as any)
 }
 
 // corner case when use narrows type
@@ -267,14 +256,17 @@ export interface RefUnwrapBailTypes {}
 export type ShallowUnwrapRef<T> = {
   [K in keyof T]: T[K] extends Ref<infer V>
     ? V
-    : T[K] extends Ref<infer V> | undefined // if `V` is `unknown` that means it does not extend `Ref` and is undefined
+    : // if `V` is `unknown` that means it does not extend `Ref` and is undefined
+    T[K] extends Ref<infer V> | undefined
     ? unknown extends V
       ? undefined
       : V | undefined
     : T[K]
 }
 
-export type UnwrapRef<T> = T extends Ref<infer V>
+export type UnwrapRef<T> = T extends ShallowRef<infer V>
+  ? V
+  : T extends Ref<infer V>
   ? UnwrapRefSimple<V>
   : UnwrapRefSimple<T>
 
@@ -287,7 +279,7 @@ export type UnwrapRefSimple<T> = T extends
   ? T
   : T extends Array<any>
   ? { [K in keyof T]: UnwrapRefSimple<T[K]> }
-  : T extends object
+  : T extends object & { [ShallowReactiveMarker]?: never }
   ? {
       [P in keyof T]: P extends symbol ? T[P] : UnwrapRef<T[P]>
     }
