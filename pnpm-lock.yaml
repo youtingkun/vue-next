@@ -94,7 +94,7 @@ importers:
       rollup-plugin-typescript2: 0.27.3_zlmz7jga2mttuvx4qwelsmvyxm
       semver: 7.3.5
       serve: 12.0.1
-      todomvc-app-css: 2.4.1
+      todomvc-app-css: 2.4.2
       ts-jest: 27.1.1_fl6hqye43ip7rnu7q76f35ejrm
       tslib: 2.4.0
       typescript: 4.6.4
@@ -6728,8 +6728,8 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /todomvc-app-css/2.4.1:
-    resolution: {integrity: sha512-1mZYRG435VmqIw1WahBYhAJbyfH4HnRNI8EgF4ypK4R1RjwgBBvXd0N57ZwCa1lbHzYBraA6+dVyAg3GAPEACQ==}
+  /todomvc-app-css/2.4.2:
+    resolution: {integrity: sha512-ViAkQ7ed89rmhFIGRsT36njN+97z8+s3XsJnB8E2IKOq+/SLD/6PtSvmTtiwUcVk39qPcjAc/OyeDys4LoJUVg==}
     dev: true
 
   /token-stream/1.0.0:
